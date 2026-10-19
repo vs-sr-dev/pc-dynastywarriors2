@@ -247,3 +247,40 @@ looked like a GS-thread race; counters in the heartbeat showed VSync
 returning every field while the kernel never took VBON, which led to the
 FIELD rule. Twice more a bash heredoc ate backslashes in a Python edit
 script (fixed before anything was built); edit scripts now go into files.
+
+
+## Session 7 — VU1: the 3D models
+
+Goal: VU1, with the character select as its first picture ([15-vu1](15-vu1.md)).
+
+Results:
+
+* **VIF1 in full** (ps2kit `runtime/vif1.cpp`): UNPACK in every format with
+  write cycles, masks and modes, the OFFSET/BASE double buffer, ITOP,
+  MSCAL/MSCALF/MSCNT, MPG; XGKICK into GIF path 1.
+* **One interpreter for VU0 and VU1** (`runtime/vu.cpp`) with the FMAC,
+  FDIV, EFU and integer pipelines modelled: DW2's rigid-part program reads
+  the MAC flags exactly four pairs after their producer, with newer results
+  in flight. VU0's library still checks against libm as before.
+* **VIF1 and VU1 on their own thread**: run inside the vblank handler they
+  took more than a field and starved the game's main thread (found with a
+  profiler that now records whole guest call chains).
+* **The character select at 50 frames a second**, its officers drawn; lit
+  and textured once vf30, which no program of the game writes before it,
+  holds a fog factor (`PS2KIT_VU1_VF`; question below).
+* **Speed**: VU pairs decoded once, a no-stall shortcut, FMAC arithmetic
+  with DAZ/FTZ: 22 to 50-57 million pairs a second, each step checked byte
+  for byte with the new `vubench`. The GS's CLUT buffer loaded as CLD says
+  (it was read per triangle): a battle field 15 ms to 8.5 ms.
+* **The attract-mode battle draws** (walls, trees, ground, soldiers), but
+  one field in four or five the game finds its lists unfinished at the
+  vertical blank and resets the GS (`main_callback`, decompiled with the new
+  `ghidra/Decomp.java`). Holding the blank was tried and taken out.
+
+What took the time: the black character select was three causes in a row:
+VU1 starving the main thread (the fade-in stopped), then a fade sprite that
+hid everything, then the fog factor from vf30. Each was found by measuring
+(per-record replays of a GS recording, a watch on the fade counter, guest
+call chains in the profiler) rather than by reading the microcode, which
+was right. A bash heredoc ate backslashes twice more (one compile error
+each, nothing kept).

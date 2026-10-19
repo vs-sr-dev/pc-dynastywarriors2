@@ -64,7 +64,10 @@ the title screen and its menu ([docs/13-title.md](docs/13-title.md)).
 Session 6: a GS rasteriser 2.5 times faster, checked against a reference
 form of itself field by field, and the GS on its own thread: the menu runs
 at full speed and opens the character select
-([docs/14-gs-speed.md](docs/14-gs-speed.md)).
+([docs/14-gs-speed.md](docs/14-gs-speed.md)). Session 7: VIF1 in full and
+VU1, with their pipelines modelled, on a thread of their own: the character
+select's 3D models, and the attract mode's battle, not yet at full speed
+([docs/15-vu1.md](docs/15-vu1.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -82,6 +85,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     12-movies.md        the memory card, streaming, the IPU, the GS: the first pictures
     13-title.md         input, VU0's micro mode, VIF1 and GIF path 2: the title screen
     14-gs-speed.md      the GS's recordings, two rasterisers, the GS's thread: the character select
+    15-vu1.md           VIF1, VU1 and its pipelines, the CLUT buffer: the 3D models
 
 ## Licence
 
