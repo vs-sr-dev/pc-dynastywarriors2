@@ -1,29 +1,37 @@
-# TODO — session 2
+# TODO — session 3
 
-Phase 1 of [06-attack-plan](06-attack-plan.md): the translator.
+Phase 2 of [06-attack-plan](06-attack-plan.md): boot. The translator is
+done and checked ([09-recompiler](09-recompiler.md)); the runtime so far is
+memory, dispatch and a stub that stops at the first system call.
 
-1. `ps2kit.recomp`, first cut: one C++ function per entry of
-   `build/map/symbols.tsv`, branch labels, delay slots (likely branches on the
-   taken path only), `jal` direct, `jr ra` return, `jalr`/`jr` through a
-   dispatch table; the guest state struct; one helper per operation of the
-   census. Goal: all 4 073 functions compile and link (a stub runtime is
-   enough).
-2. Switch tables: find the `jr` that are not `jr ra` (there are
-   3 986 `jr`; how many are tables?), size them from the bounds check before
-   them, read their targets from `.rodata`.
-3. `ps2kit.eeemu`, a reference interpreter in Python, and the first
-   differential tests on leaf functions of the game (`memcpy`, `strlen`,
-   `strcmp`, the soft-float routines in `dp-bit.c`/`fp-bit.c`, `sqrtf`).
-4. The FPU's PS2 rules (no denormals, no inf/NaN, clamping): write them down
-   with a source for each, test them in the interpreter and the helpers.
+1. **Loader and entry**: load the ELF's segments, `_start` with the
+   arguments the boot ROM gives (`argc`/`argv`: `cdrom0:\SLES_500.57;1`),
+   the host thread that runs guest code with `rt_init_fpu()`.
+2. **The kernel at the syscall boundary**, the surface the game uses
+   (53 stubs it calls; numbers from the SDK's own `klib.s`, listed in
+   session 2): `SetupThread` (60) and `SetupHeap` (61) from `crt0`;
+   threads (`CreateThread`, `StartThread`, `GetThreadId`,
+   `ReferThreadStatus`, `ChangeThreadPriority`, `RotateThreadReadyQueue`,
+   `SleepThread`/`WakeupThread`, `ExitThread`); semaphores (`CreateSema`,
+   `SignalSema` ×51, `WaitSema`, `PollSema`, `iSignalSema`); interrupt and
+   DMA handlers (`AddIntcHandler`, `AddDmacHandler`, `_EnableIntc`...),
+   alarms, `FlushCache`, `GsGetIMR`/`GsPutIMR`, `SetVSyncFlag`, the SIF
+   (`sceSifSetDma`, `sceSifSetDChain`, `sceSifSetReg`/`GetReg`,
+   `sceSifDmaStat`), `Deci2Call` (devkit leftovers: answer "no").
+   Guest threads as host threads (or fibers), one running at a time, as
+   wiikit's `os.cpp` does.
+3. **First output**: the game's `printf` reaches the host console; run to
+   the first wait on the IOP (`sceSifInitRpc`, module loading). Record the
+   order of the calls; compare with a PCSX2 trace of the same boot if the
+   order is in doubt.
+4. Keep the differential tests green on every runtime change (named suite
+   and leaf fuzzing; numbers in [00-sessions](00-sessions.md)).
 
-5. `ps2kit.fingerprint`: report whether each executable is stripped
-   (`.symtab` functions, `.mdebug`), so a candidate game's luck is known at
-   once. Of the three PS2 games so far only this one keeps its symbols
-   (Extermination: an empty `.symtab`; Evergrace: none).
-
-Decided after session 1:
-* ps2kit and this repo go public on GitHub, but only once the recompiler
-  shows something.
-* PCSX2 is the behaviour oracle: a portable 2.9.129 build
-  (BIOS dumps beside it).
+Open points from session 2:
+* The model of the FPU and VUs is PCSX2's default (round toward zero,
+  clamping); the console's last-bit differences in products and its
+  exponent-255 numbers are not modelled.
+* Operations never exercised by a test (system ones aside): `qmfc2.i`,
+  `sqrt.s`, `viadd`, `vmtir` and a few VU0 forms (`vmax`, `vmini*`,
+  `vmsuba*`, `vmula[iw]`, `vmuli`), `divu1`/`mflo1`. They sit in non-leaf
+  functions; a named case or two would cover them.

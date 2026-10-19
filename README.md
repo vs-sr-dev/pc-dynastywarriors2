@@ -36,8 +36,11 @@ python -m ps2kit.ee build/disc/SLES_500.57 --census --functions build/map/symbol
 Session 1: the disc and the executable are mapped. The executable is not
 stripped: 4 073 functions with their sizes and source files tile its code
 exactly, and ps2kit's new EE decoder reads all of it the same way Ghidra
-does. Next: the translator. See [docs/00-sessions.md](docs/00-sessions.md)
-for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
+does. Session 2: ps2kit's translator turns all of it into C++ that compiles
+and links, and the recompiled functions match a reference interpreter
+register for register and byte for byte (2 311 differential runs, none
+different). Next: the runtime, from `_start` to the game's first output.
+See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
 ## Documentation
@@ -48,6 +51,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     04-curiosities.md   what the disc reveals about its making
     06-attack-plan.md   the porting route
     07-next-session.md  the plan for the next session
+    09-recompiler.md    the translator and how it is checked
     10-ps2kit.md        what this port asked of ps2kit
 
 ## Licence
