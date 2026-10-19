@@ -6,11 +6,12 @@ pad and sound initialisation, runs its 50 Hz vblank loop, and stops at its
 first memory card request, `sceMcGetInfo` (mcserv function 1), in
 `MusouMCardGameStart`. Nothing is drawn yet.
 
-1. **Decide with the user what "something to show" is now.** The planned
-   checkpoint for publishing (the game's first lines on the host console)
-   does not exist: DW2 prints nothing while things go right. Candidates:
-   the boot as it stands (with its trace), or the first picture (the Koei
-   logo movie, or the first GS frame).
+1. **The publishing checkpoint is now the first picture** (decided with
+   the user at the end of session 3): the Koei logo movie or the first GS
+   frame on screen. The planned one (the game's first lines on the host
+   console) does not exist: DW2 prints nothing while things go right. When
+   the first picture shows, ask the user before creating the GitHub repos
+   and pushing.
 2. **The memory card.** Choose what is in the slots (no card, or an empty
    formatted 8 MB card; later a card kept as host files), and answer
    mcserv's functions (1 GetInfo, 2 Open, 3 Close, 4 Seek, 5 Read, 6 Write,
