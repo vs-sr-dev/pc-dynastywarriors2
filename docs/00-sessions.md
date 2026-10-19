@@ -230,6 +230,15 @@ Results:
   `kpmStartDisplay` polls VSync until FIELD changes, clearing VBON itself
   before the kernel takes it; FIELD changed only when the kernel took it,
   so movies could hang. The guest's acknowledgement counts now.
+* **Played in a window by the user** (keyboard and an Xbox pad): menus,
+  character select, a battle without its 3D models. Fixed after it: the
+  picture is taken at each vertical blank in the GS's order (it could be
+  half drawn), interlaced fields are shown at their own lines and blended
+  with the field before (`PS2KIT_DEINTERLACE`; measured on the menu); VIF1
+  and the GIF start on STR's 0-to-1 edge only (a CHCR written back while
+  busy restarted VIF1's chain from its end and crashed the attract mode);
+  local-to-host transfers through VIF1. The user's verdict: everything but
+  sound and the 3D works, and the flicker is gone.
 
 What took the time: the first speed-up (shifts for the addresses' divisions)
 gave 15%; a profiler, not a guess, showed the cost spread over every

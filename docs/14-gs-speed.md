@@ -133,8 +133,72 @@ through the movies without a stop, and the synchronous mode still reaches
 the menu. How the console's kernel leaves the bit for VSync to see with
 the interrupt enabled is not known yet: a question for the PCSX2 trace.
 
+## Played in a window: the picture, the fields, a stray DMA
+
+The user played it in a window, keyboard and an Xbox pad: menus, the
+character select, into a battle (the 3D models are VU1's and missing;
+shadows, particles and weapon trails already show), and found two faults.
+
+**The menus shook.** Two causes, measured on a menu recording:
+
+* The window read local memory whenever it drew, while the GS thread was
+  redrawing it: DW2 draws every field into the one buffer it shows (DISPFB
+  stays at block 0), so the window could catch a half-drawn picture. Now
+  the GS thread takes the PCRTC's picture at each vertical blank, in its
+  queue's order, after everything sent before the blank is drawn
+  (`gs_present_enable`, `gs_picture`); the window and `--shot` show that.
+* The game draws for a television. SMODE2 is interlaced with FFMD; each
+  field is a 640 x 256 picture of the 640 x 512 screen, and XYOFFSET's Y
+  moves by half a line between fields (0x7800 and 0x7808). On a monitor
+  the fields alternate their even and odd lines in place. The picture is
+  now 512 lines, each field at its own lines: one line lower for the odd
+  field. Which field a picture belongs to was measured, not assumed: paired
+  with the field the blank begins (FIELD after its change), the picture for
+  FIELD 1 lies 0.375 buffer lines above the one for FIELD 0 (the logo's
+  sub-line shift between fields, by interpolation), so the odd field shown
+  lower brings them within a quarter of a screen line; paired the other
+  way, the shake doubled. Each field alone still flickers (every other
+  line of fine detail changes at 25 Hz), so a field is shown with the one
+  before it: `PS2KIT_DEINTERLACE=blend` (the default, the two averaged),
+  `weave` (lines from both) or `bob` (the field alone). Between consecutive
+  pictures of the menu, the still background changes by 5.15 levels a
+  pixel with bob and 0.00 with blend or weave; the logo by 8.54 and 0.12.
+  The user confirmed the menus are still now.
+
+**The game stopped when the menu was left alone.** The runtime ended on
+`DMA beyond the scratchpad`, VIF1 walking a chain of nonsense tags. The
+tag history (now printed with such an error) showed one transfer ending on
+its END tag and the next starting from the address after it, where vertex
+data lies: DW2 had written CHCR back with STR still set. With the GS thread
+VIF1 stays busy until the GS has drawn its data, and a write of STR = 1 to
+a busy channel was taken as a new start. On the console a transfer starts
+when STR goes from 0 to 1; VIF1 and the GIF now do the same, and a
+deferred end carries the number of its transfer, so that an end arriving
+late cannot end the next one. After that, 90 seconds of the attract
+sequence (203 million VIF1 quadwords) ran without a fault. The VIF1 walker
+no longer stops the runtime on a word that is not a code: it prints the
+codes before it and drops what is waiting (it does nothing with VIF1's
+data but DIRECT yet).
+
+Later in a longer game the runtime stopped once more: the game read local
+memory back (TRXDIR = 1, then VIF1 towards memory). Local-to-host transfers
+are modelled now: the request takes its place in the GS thread's queue,
+the GS writes the source rectangle into EE memory in the transfer's format
+when it reaches it, and only then does VIF1's channel end. The next games
+(10 minutes) ran to the end; whether that moment came again is not known
+(the transfer leaves no line in the log). The game also turns both PCRTC
+read circuits on at times; only circuit 2 is shown until their merge is
+written down from a source.
+
+The attract sequence the menu leads to is drawn by the engine (the IPU is
+idle throughout), mostly by VU1: its large green and black areas are what
+is missing, not a movie decoding fault. The opening movie itself, at boot
+without a key pressed, decodes as it did in session 5 (checked against a
+build of session 5's runtime).
+
 ## Tools
 
 * `PS2KIT_GS_DUMP=file[,start[,fields]]`: a recording, as above.
 * `gsreplay FILE [--ref] [--compare] [--shots DIR] [--repeat N] [--profile]`.
 * `PS2KIT_GS_SYNC=1`: no GS thread.
+* `PS2KIT_DEINTERLACE=blend|weave|bob`: how interlaced fields are shown.

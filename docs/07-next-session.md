@@ -29,8 +29,10 @@ too (vertical stripes on screen now).
    for the SDK's VSync to see while the interrupt is enabled (Koei's movie
    player depends on it; [14-gs-speed](14-gs-speed.md)).
 4. **The GS, the rest.** The Z formats' and PSMCT16S's own block layouts,
-   CSM2 CLUTs, CLUT loading as the GS does it (CLD, at TEX0), local-to-host
-   transfers, mipmaps. Each in both rasterisers, checked with
+   CSM2 CLUTs, CLUT loading as the GS does it (CLD, at TEX0), mipmaps; the
+   PCRTC's merge of its two read circuits (DW2 turns both on at times; only
+   circuit 2 is shown); a check of local-to-host transfers on the moment
+   that uses them. Each in both rasterisers, checked with
    `gsreplay --compare`. If the game's 3D scenes are heavier than the menu
    (10 ms a field now on one core), rows spread over several threads.
 5. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS); an SPU2
@@ -39,9 +41,10 @@ too (vertical stripes on screen now).
    saving and loading.
 
 Open points:
-* The keyboard and gamepad paths in a window are still untried by us
-  (only scripted presses so far); the menu now answers at once, so it is
-  the moment to try them.
+* Keyboard and an Xbox pad were tried by the user in session 6: menus,
+  character select and a battle work (without VU1's models).
+* Deinterlacing is blend by default; whether battles look better with
+  weave is for the user's eye (`PS2KIT_DEINTERLACE`).
 * `--press` times are host seconds, and the boot's length depends on the
   host's load (and on how quickly the movies are skipped): times in
   vertical blanks would be steadier.
