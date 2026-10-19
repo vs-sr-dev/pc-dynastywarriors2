@@ -9,20 +9,24 @@ checkpoint.
    run, no stop); see where the game goes after the opening and what stops
    it: the title screen (a TITLE movie exists too) is the next picture to
    aim at.
-2. **VIF1 and VU1.** DMA to VIF1 is counted, not run. The 3D (and probably
+2. **Input.** The DualShock 2 on port 0 never has a button down: the
+   title screen will wait for Start. SDL3 keyboard and gamepad events into
+   padman's per-vblank frames (`iop.cpp`, `pad_vblank`), with a default
+   mapping; for runs without a window, a scripted input (`--press T:START`).
+3. **VIF1 and VU1.** DMA to VIF1 is counted, not run. The 3D (and probably
    the title's 2D overlays) go through VIF1 packets, VU1 microprograms and
    XGKICK (GIF path 1); ps2kit has `vif.py` and `vu.py` in Python as a start.
    VIF1 DIRECT/DIRECTHL is GIF path 2.
-3. **The GS, the rest.** The Z formats' and PSMCT16S's own block layouts,
+4. **The GS, the rest.** The Z formats' and PSMCT16S's own block layouts,
    CSM2 CLUTs, CLUT loading as the GS does it (CLD), local-to-host
    transfers, mipmaps; each said once when a game first uses it.
-4. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS) answer
+5. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS) answer
    from a stand-in; the movies' ADPCM reaches the IOP and goes nowhere. Port
    their logic from their code; an SPU2 model; check by ear.
-5. **A PCSX2 trace of the same boot**, still to do: the order of the IOP
+6. **A PCSX2 trace of the same boot**, still to do: the order of the IOP
    commands and RPC calls, the PCRTC registers, a few screenshots at the
    same moments.
-6. **The memory card with data**: a formatted card kept as host files, for
+7. **The memory card with data**: a formatted card kept as host files, for
    saving and loading.
 
 Open points:
