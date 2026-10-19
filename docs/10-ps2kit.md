@@ -1,0 +1,15 @@
+# ps2kit in this port
+
+ps2kit is a submodule at `ps2kit/` (local URL `../ps2kit`; clone with
+`git -c protocol.file.allow=always`). Run its tools from the repository
+root: `python -m ps2kit.<module>`.
+
+## What this game asked of it
+
+| Session | ps2kit commit | Added |
+|---|---|---|
+| 1 | `05532fe` | the split from pc-extermination; `disc` (CD images, `SYSTEM.CNF`), `elf` symbols and function map, `mdebug`, `ee` (the R5900 decoder), `ghidra/ExportListing.java` |
+
+Game knowledge (file formats of `LINKDATA.BNS`, `SCENE.SDF`, the game's
+fixes) stays in this repository's `tools/`; only what any PS2 game could
+use goes into ps2kit.

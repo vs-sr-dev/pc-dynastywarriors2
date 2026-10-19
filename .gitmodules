@@ -1,0 +1,3 @@
+[submodule "ps2kit"]
+	path = ps2kit
+	url = ../ps2kit
