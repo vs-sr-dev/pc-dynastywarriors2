@@ -57,7 +57,11 @@ card request ([docs/11-boot.md](docs/11-boot.md)). Session 4: the memory
 card (an empty slot), streaming from the disc, ps2kit's models of the IPU
 (checked against ffmpeg on the game's movies) and of the GS, and a window:
 the game shows its first pictures, the Koei and Midas logo movies
-([docs/12-movies.md](docs/12-movies.md)).
+([docs/12-movies.md](docs/12-movies.md)). Session 5: input from the host
+(keyboard, gamepad, scripted presses), VU0's micro mode (checked against
+libm on the game's own trigonometry library), VIF1's direct path to the GS:
+the title screen and its menu, which runs slowly until the GS model is
+faster ([docs/13-title.md](docs/13-title.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -73,6 +77,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     10-ps2kit.md        what this port asked of ps2kit
     11-boot.md          the runtime's boot, what the game does, what it showed
     12-movies.md        the memory card, streaming, the IPU, the GS: the first pictures
+    13-title.md         input, VU0's micro mode, VIF1 and GIF path 2: the title screen
 
 ## Licence
 

@@ -159,3 +159,47 @@ and so, for a while, was the comparison with ffmpeg itself: libmpeg keeps
 its pictures by macroblock columns, and the raster comparison showed
 errors that were not there. The movies ran at 3.6 frames a second until
 the short IPU commands stopped crossing threads.
+
+## Session 5 — the title screen
+
+Goal: past the movies, to the title screen ([13-title](13-title.md)).
+
+Results:
+
+* **Input** (ps2kit `runtime/input.cpp`): the pad in port 0 from the
+  keyboard and a gamepad (SDL3), and scripted presses (`--press`) for runs
+  without a window. The button layout was read in the game's own pad code
+  (`CKzPad`, `padfunc.c`). Start skips the movies; the title's menu takes
+  the arrows and cross.
+* **VU0's micro mode and VIF0** (ps2kit `runtime/vu0.cpp`): the game's
+  trigonometry library, uploaded once by VIF0, runs in an interpreter
+  that follows PCSX2's pair rules and checks, at every run, that the
+  program reads no flag and no Q sooner than the console's pipeline would
+  give them. 863 logged runs of six programs agree with libm and with their
+  own polynomials (`tools/vu0check.py`).
+* **VIF1 and GIF path 2** (ps2kit `runtime/vif1.cpp`): VIF1's codes are
+  counted (the census says what VU1 will need), DIRECT and DIRECTHL go to
+  GIF path 2, with a packet in progress per GIF path.
+* **The disc's clock** (`sceCdReadClock`), from CDVDFSV's and CDVDMAN's code.
+* **The title screen and its menu** on screen: the logo, the three
+  crystals. On the menu the game makes a frame every four seconds or so:
+  its vblank handler sends the display lists again every field, and the
+  GS model takes the whole field to draw them. That is next, then VU1.
+* Macro mode follows the same rules as micro mode: MAX and MINI on bit
+  patterns without flags, DIV, SQRT and RSQRT with the I and D flags; the
+  differential tests still agree.
+* Debugging aids: `PS2KIT_WATCH` (guest memory on change), `PS2KIT_VU0_LOG`.
+
+What took the time: the title seemed deaf to start. The pad words were
+right; the title had gone straight to its menu (after a skipped opening it
+skips "press start"), whose crystals were missing and which wants cross.
+A fade after a cross looked like the menu answering; it was the demo's
+timeout. Once the crystals were drawn, cross seemed lost; the watch on the
+frame counter showed the game making a frame every four seconds.
+The crystals were missing because vf0 was (0, 0, 0, 0) in the runtime's
+first thread, so the game's VU0 constant vf31 (made as vf0 - vf0 + vf0.w)
+was 0 and the cosines, atan2 and rotations came out wrong; checking the
+VU0 programs against libm found it at once. The differential tests had
+never seen it: they set vf0 themselves. Twice more, a bash heredoc ate backslashes in a Python
+edit script; nothing reached a file, the scripts were rewritten.
+
