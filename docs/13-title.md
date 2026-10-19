@@ -169,3 +169,6 @@ So the next piece is the GS's speed (a rasteriser that decodes its
 registers once per primitive rather than per pixel, and probably the GS on
 its own thread, as the console's GS works beside the EE), then VU1 for the
 demo and the game. See [07-next-session](07-next-session.md).
+
+Session 6 did both ([14-gs-speed](14-gs-speed.md)): the menu runs at 50
+frames a second, and a short press of cross opens the character select.

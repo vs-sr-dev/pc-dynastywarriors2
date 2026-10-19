@@ -203,3 +203,38 @@ VU0 programs against libm found it at once. The differential tests had
 never seen it: they set vf0 themselves. Twice more, a bash heredoc ate backslashes in a Python
 edit script; nothing reached a file, the scripts were rewritten.
 
+
+## Session 6 — the GS's speed, the character select
+
+Goal: a GS model fast enough for the title menu ([14-gs-speed](14-gs-speed.md)).
+
+Results:
+
+* **A recording of the GS's work and its replay** (ps2kit
+  `PS2KIT_GS_DUMP`, `runtime/gsreplay.cpp`): the GS's state, then every
+  packet and vertical blank, played again without the game, timed,
+  pictured, profiled.
+* **Two rasterisers, one result**: a reference that reads the registers at
+  every pixel, and a fast one that decodes them once per primitive;
+  `gsreplay --compare` finds them equal after every field of two menu
+  recordings (250 fields). 50.7 million pixels a second against session 5's
+  17 to 19; 8.5 ms a menu field against 24. Edge functions are exact 64-bit
+  integers now; on the session-5 recording that changed no byte.
+* **The GS on its own thread**: DMA channels 1 and 2 end when the GS has
+  drawn their data, SIGNAL and FINISH arrive when the GS meets them;
+  `PS2KIT_GS_SYNC=1` keeps the old way.
+* **The menu at full speed** (50 frames a second, was one in four seconds),
+  and cross on MUSOU MODE opens the **character select** (Zhao Yun's
+  portrait and bars; the model himself is VU1's).
+* **FIELD and VBON acknowledged by the guest**: the movie player's
+  `kpmStartDisplay` polls VSync until FIELD changes, clearing VBON itself
+  before the kernel takes it; FIELD changed only when the kernel took it,
+  so movies could hang. The guest's acknowledgement counts now.
+
+What took the time: the first speed-up (shifts for the addresses' divisions)
+gave 15%; a profiler, not a guess, showed the cost spread over every
+pixel's decoding, which is what the fast rasteriser removes. The hang
+looked like a GS-thread race; counters in the heartbeat showed VSync
+returning every field while the kernel never took VBON, which led to the
+FIELD rule. Twice more a bash heredoc ate backslashes in a Python edit
+script (fixed before anything was built); edit scripts now go into files.

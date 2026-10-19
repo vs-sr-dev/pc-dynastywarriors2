@@ -60,8 +60,11 @@ the game shows its first pictures, the Koei and Midas logo movies
 ([docs/12-movies.md](docs/12-movies.md)). Session 5: input from the host
 (keyboard, gamepad, scripted presses), VU0's micro mode (checked against
 libm on the game's own trigonometry library), VIF1's direct path to the GS:
-the title screen and its menu, which runs slowly until the GS model is
-faster ([docs/13-title.md](docs/13-title.md)).
+the title screen and its menu ([docs/13-title.md](docs/13-title.md)).
+Session 6: a GS rasteriser 2.5 times faster, checked against a reference
+form of itself field by field, and the GS on its own thread: the menu runs
+at full speed and opens the character select
+([docs/14-gs-speed.md](docs/14-gs-speed.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -78,6 +81,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     11-boot.md          the runtime's boot, what the game does, what it showed
     12-movies.md        the memory card, streaming, the IPU, the GS: the first pictures
     13-title.md         input, VU0's micro mode, VIF1 and GIF path 2: the title screen
+    14-gs-speed.md      the GS's recordings, two rasterisers, the GS's thread: the character select
 
 ## Licence
 
