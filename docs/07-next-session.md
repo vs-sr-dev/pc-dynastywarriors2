@@ -17,7 +17,13 @@ Phase 1 of [06-attack-plan](06-attack-plan.md): the translator.
 4. The FPU's PS2 rules (no denormals, no inf/NaN, clamping): write them down
    with a source for each, test them in the interpreter and the helpers.
 
-Open questions for the user (asked at the end of session 1):
-* publish ps2kit (and this repo) on GitHub now, or once the recompiler
-  shows something?
-* PCSX2 as the behaviour oracle: install it on the work machine?
+5. `ps2kit.fingerprint`: report whether each executable is stripped
+   (`.symtab` functions, `.mdebug`), so a candidate game's luck is known at
+   once. Of the three PS2 games so far only this one keeps its symbols
+   (Extermination: an empty `.symtab`; Evergrace: none).
+
+Decided after session 1:
+* ps2kit and this repo go public on GitHub, but only once the recompiler
+  shows something.
+* PCSX2 is the behaviour oracle: a portable 2.9.129 build
+  (BIOS dumps beside it).

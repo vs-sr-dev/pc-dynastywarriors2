@@ -95,8 +95,8 @@ always), pads from SDL3, memory cards as files.
 * **Ghidra** with ghidra-emotionengine-reloaded, as a second decoder (done for
   `ps2kit.ee`) and to decompile when reading a function.
 * **PCSX2**, for behaviour: screenshots and video of the same moments, and
-  traces (file reads, RPC calls, GS registers) where a phase needs them. Not
-  installed on the work machine yet.
+  traces (file reads, RPC calls, GS registers) where a phase needs them
+  (2.9.129).
 * **The user's own console and disc**, for what only the real thing can
   settle.
 
