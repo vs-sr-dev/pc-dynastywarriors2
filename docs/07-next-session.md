@@ -1,48 +1,51 @@
-# TODO — session 3
+# TODO — session 4
 
-Phase 2 of [06-attack-plan](06-attack-plan.md): boot. The translator is
-done and checked ([09-recompiler](09-recompiler.md)); the runtime so far is
-memory, dispatch and a stub that stops at the first system call.
+Where session 3 left the game ([11-boot](11-boot.md)): it boots from the
+disc image through the IOP reboot, module loading, file searches and reads,
+pad and sound initialisation, runs its 50 Hz vblank loop, and stops at its
+first memory card request, `sceMcGetInfo` (mcserv function 1), in
+`MusouMCardGameStart`. Nothing is drawn yet.
 
-1. **Loader and entry**: load the ELF's segments, `_start` with the
-   arguments the boot ROM gives (`argc`/`argv`: `cdrom0:\SLES_500.57;1`),
-   the host thread that runs guest code with `rt_init_fpu()`.
-2. **The kernel at the syscall boundary**, the surface the game uses
-   (53 stubs it calls; numbers from the SDK's own `klib.s`, listed in
-   session 2): `SetupThread` (60) and `SetupHeap` (61) from `crt0`;
-   threads (`CreateThread`, `StartThread`, `GetThreadId`,
-   `ReferThreadStatus`, `ChangeThreadPriority`, `RotateThreadReadyQueue`,
-   `SleepThread`/`WakeupThread`, `ExitThread`); semaphores (`CreateSema`,
-   `SignalSema` ×51, `WaitSema`, `PollSema`, `iSignalSema`); interrupt and
-   DMA handlers (`AddIntcHandler`, `AddDmacHandler`, `_EnableIntc`...),
-   alarms, `FlushCache`, `GsGetIMR`/`GsPutIMR`, `SetVSyncFlag`, the SIF
-   (`sceSifSetDma`, `sceSifSetDChain`, `sceSifSetReg`/`GetReg`,
-   `sceSifDmaStat`), `Deci2Call` (devkit leftovers: answer "no").
-   Guest threads as host threads (or fibers), one running at a time, as
-   wiikit's `os.cpp` does.
-3. **First output**: the game's `printf` reaches the host console; run to
-   the first wait on the IOP (`sceSifInitRpc`, module loading). Record the
-   order of the calls; compare with a PCSX2 trace of the same boot if the
-   order is in doubt.
-4. Keep the differential tests green on every runtime change (named suite
-   and leaf fuzzing; numbers in [00-sessions](00-sessions.md)).
+1. **Decide with the user what "something to show" is now.** The planned
+   checkpoint for publishing (the game's first lines on the host console)
+   does not exist: DW2 prints nothing while things go right. Candidates:
+   the boot as it stands (with its trace), or the first picture (the Koei
+   logo movie, or the first GS frame).
+2. **The memory card.** Choose what is in the slots (no card, or an empty
+   formatted 8 MB card; later a card kept as host files), and answer
+   mcserv's functions (1 GetInfo, 2 Open, 3 Close, 4 Seek, 5 Read, 6 Write,
+   10 Flush, 12 Chdir, 13 GetDir, 14 SetFileInfo, 15 Delete, 16 Format,
+   18 GetEntSpace; numbers from libmc in the game) with the codes MCSERV
+   and MCMAN return, read from their code as was done for function 0xFE.
+   `sceMcGetInfo` is asynchronous: its end function copies type, free
+   space and format from a 0xC0-byte area; `sceMcSync` gets the result.
+3. **The movies**: `msPlayMovie` (KOEILOGO.PSS first) through libmpeg and
+   the IPU; see what it asks of the IOP (`sceCdStRead`, streaming) and of
+   the hardware (IPU FIFO, DMA channels 3 and 4).
+4. **Phase 4 begins**: the GS behind GIF DMA (path 3 first, what
+   `main_callback` sends every frame: about 23 quadwords), an SDL3 window
+   and OpenGL; `ps2kit.gsmem` already models local memory. Then VIF1 and
+   VU1 for the 3D.
+5. **A PCSX2 trace of the same boot** (still to do): the order of the IOP
+   commands and RPC calls up to the memory card, against `--trace 1`.
 
-5. When the game prints its first lines on the host: ask the user whether
-   that is "something to show" for publishing ps2kit and this repo on
-   GitHub (decided after session 1: public, but not before).
+Open points:
+* FIELD changes three lines after the kernel takes VBON (a choice; the
+  game only needs "after the interrupt starts"); check against PCSX2.
+* The DualShock 2's actuator answers (01 02 00 0A, 01 01 01 14) are from
+  public descriptions of the pad protocol; check against PCSX2.
+* Koei's sound drivers answer zeros (a silent stand-in); 0 is confirmed as
+  success for kessound's init only. Phase 5 ports them from their code.
+* Deci2's TTY is implemented from the SDK's code but has printed nothing
+  yet (the game prints only on errors).
+* From session 2: the FPU/VU model's last-bit differences and exponent 255;
+  operations no test exercises (`qmfc2.i`, `sqrt.s`, `viadd`, `vmtir`, a few
+  VU0 forms, `divu1`/`mflo1`).
 
-Restarting: run ps2kit from the directory that holds the checkout being
-edited (the directory holding the ps2kit checkout), not from this repository's root, where the pinned
-submodule would be imported. Regenerate with `python -m ps2kit.recomp
+Restarting: run ps2kit from the directory holding the ps2kit checkout (the checkout being edited), not
+from this repository's root. Regenerate with `python -m ps2kit.recomp
 pc-dynastywarriors2/build/disc/SLES_500.57 --out pc-dynastywarriors2/build/recomp`,
-rebuild with `ninja -C build/recomp-build` (clang, cmake, ninja from
-MSYS2's MinGW 64-bit environment), test as in [09-recompiler](09-recompiler.md).
-
-Open points from session 2:
-* The model of the FPU and VUs is PCSX2's default (round toward zero,
-  clamping); the console's last-bit differences in products and its
-  exponent-255 numbers are not modelled.
-* Operations never exercised by a test (system ones aside): `qmfc2.i`,
-  `sqrt.s`, `viadd`, `vmtir` and a few VU0 forms (`vmax`, `vmini*`,
-  `vmsuba*`, `vmula[iw]`, `vmuli`), `divu1`/`mflo1`. They sit in non-leaf
-  functions; a named case or two would cover them.
+build with `ninja -C build/recomp-build ps2run linkcheck difftest` (clang,
+cmake, ninja from MSYS2's MinGW 64-bit environment), test as in
+[09-recompiler](09-recompiler.md), run as in [11-boot](11-boot.md). Text
+with backslashes goes through the editor, never a bash heredoc.

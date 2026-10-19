@@ -39,7 +39,10 @@ exactly, and ps2kit's new EE decoder reads all of it the same way Ghidra
 does. Session 2: ps2kit's translator turns all of it into C++ that compiles
 and links, and the recompiled functions match a reference interpreter
 register for register and byte for byte (2 311 differential runs, none
-different). Next: the runtime, from `_start` to the game's first output.
+different). Session 3: ps2kit's runtime boots the recompiled game from the
+disc image, through the IOP's reboot and module loading, file reads, pad and
+sound initialisation, into its own 50 Hz frame loop, up to its first memory
+card request; nothing is drawn yet ([docs/11-boot.md](docs/11-boot.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -53,6 +56,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     07-next-session.md  the plan for the next session
     09-recompiler.md    the translator and how it is checked
     10-ps2kit.md        what this port asked of ps2kit
+    11-boot.md          the runtime's boot, what the game does, what it showed
 
 ## Licence
 

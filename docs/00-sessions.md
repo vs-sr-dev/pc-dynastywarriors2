@@ -71,3 +71,56 @@ Wrong cases (float arguments go in `$f12`, integer arguments five to eight in
 `t0`–`t3`), and one fix that never landed because a bash heredoc ate its
 backslashes. The reference's exact round-toward-zero arithmetic losing the
 sign of exact zeros. In every case the recompiled side was right.
+
+## Session 3 — the boot
+
+Goal: phase 2 of the plan, the game started on ps2kit's runtime as far as
+it goes before the IOP; it went further ([11-boot](11-boot.md)).
+
+Results:
+
+* **`ps2run`** (ps2kit `runtime/boot.cpp`): the game starts from the disc
+  image, as the boot ROM starts it: `SYSTEM.CNF`'s BOOT2, the ELF read from
+  the disc, its path as `argv[0]`.
+* **The EE kernel** at the syscall boundary (`kernel.cpp`): threads on host
+  threads with a baton, strict priorities, semaphores, sleep and wakeup,
+  INTC and DMAC handlers and alarms, SIF registers and DMA, Deci2's TTY.
+  **The hardware registers** (`hw.cpp`): INTC, DMAC, timers, GS CSR/IMR
+  with a 50 Hz vblank, SIO.
+* **The first wait on the IOP** came where the code says it would:
+  `sceSifInitCmd`, waiting for SMFLG bit 0x20000, before any output.
+* **The game prints nothing** on success: no function of its own calls
+  `printf`; only SDK libraries do, on errors. The planned check ("its first
+  lines on the host console") cannot happen in this game.
+* So phase 3 began: **the IOP at the SIF boundary** (`iop.cpp`), every
+  packet layout read from the game's own SIF libraries; the IOP reboot
+  (`IOPRP153.IMG`), ten modules "loaded" (read from the disc for their
+  headers), the RPC servers they bring found in the modules' own code.
+  cdvdfsv (init, file search, disk ready, sector reads, errors), loadfile,
+  the IOP heap, mcserv's init (versions from MCSERV's code), padman (a
+  DualShock 2 on port 0), and a silent stand-in for Koei's two sound
+  drivers. **The disc image** (`disc.cpp`): ISO 9660 and sectors, its file
+  positions equal to ps2kit's Python reader.
+* The game now runs its own frame loop at 50 Hz, reads `LINKDATA.BNS`,
+  initialises sound, finds its six movies, and stops at its first memory
+  card request (mcserv function 1); two runs give the same 946 IOP
+  commands and RPC calls and the same system calls.
+* **Diagnostics**: a heartbeat every five seconds (vblanks, DMA per
+  channel, disc reads, system calls, handler calls), `--trace 1/2`, and a
+  sampling profiler (`--profile`) that names the guest function the time
+  goes to, from the executable's unwind tables.
+* The differential tests stay green: 560 named runs and 1 751 fuzzed leaf
+  runs equal, as in session 2.
+
+What took the time: the game's vblank handler busy-waits for the GS
+FIELD bit to change. With FIELD toggled at the start of the blank, each
+call waited a whole field and the main thread starved: the profiler showed
+97% of the time in `main_callback`. Three causes, found one after another
+by measuring: the clock thread overslept by up to 15 ms on Windows; the
+guest's tight CSR polling starved the clock of the hardware lock; and
+interrupts here are taken at loop back-edges, not within cycles. Reading the
+real BIOS kernel (1.60, 2001) settled how the dispatcher takes interrupts
+(highest cause only, cleared before the handlers) and that `_EnableIntc`
+leaves a pending cause alone, as modelled. Two smaller bugs: an index into
+the FIFO table (a crash) and `rt_die` calling `exit()` while other threads
+held locks (a hang); the bash-heredoc trap from session 2 bit twice more.
