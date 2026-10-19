@@ -1,52 +1,50 @@
-# TODO — session 4
+# TODO — session 5
 
-Where session 3 left the game ([11-boot](11-boot.md)): it boots from the
-disc image through the IOP reboot, module loading, file searches and reads,
-pad and sound initialisation, runs its 50 Hz vblank loop, and stops at its
-first memory card request, `sceMcGetInfo` (mcserv function 1), in
-`MusouMCardGameStart`. Nothing is drawn yet.
+Where session 4 left the game ([12-movies](12-movies.md)): it boots, finds no
+memory card, and plays its logo movies through ps2kit's IPU and GS models
+in a window, at 25 frames a second. The repositories were published at that
+checkpoint.
 
-1. **The publishing checkpoint is now the first picture** (decided with
-   the user at the end of session 3): the Koei logo movie or the first GS
-   frame on screen. The planned one (the game's first lines on the host
-   console) does not exist: DW2 prints nothing while things go right. When
-   the first picture shows, ask the user before creating the GitHub repos
-   and pushing.
-2. **The memory card.** Choose what is in the slots (no card, or an empty
-   formatted 8 MB card; later a card kept as host files), and answer
-   mcserv's functions (1 GetInfo, 2 Open, 3 Close, 4 Seek, 5 Read, 6 Write,
-   10 Flush, 12 Chdir, 13 GetDir, 14 SetFileInfo, 15 Delete, 16 Format,
-   18 GetEntSpace; numbers from libmc in the game) with the codes MCSERV
-   and MCMAN return, read from their code as was done for function 0xFE.
-   `sceMcGetInfo` is asynchronous: its end function copies type, free
-   space and format from a 0xC0-byte area; `sceMcSync` gets the result.
-3. **The movies**: `msPlayMovie` (KOEILOGO.PSS first) through libmpeg and
-   the IPU; see what it asks of the IOP (`sceCdStRead`, streaming) and of
-   the hardware (IPU FIFO, DMA channels 3 and 4).
-4. **Phase 4 begins**: the GS behind GIF DMA (path 3 first, what
-   `main_callback` sends every frame: about 23 quadwords), an SDL3 window
-   and OpenGL; `ps2kit.gsmem` already models local memory. Then VIF1 and
-   VU1 for the 3D.
-5. **A PCSX2 trace of the same boot** (still to do): the order of the IOP
-   commands and RPC calls up to the memory card, against `--trace 1`.
+1. **After the movies.** The logos and the opening play (two minutes of a
+   run, no stop); see where the game goes after the opening and what stops
+   it: the title screen (a TITLE movie exists too) is the next picture to
+   aim at.
+2. **VIF1 and VU1.** DMA to VIF1 is counted, not run. The 3D (and probably
+   the title's 2D overlays) go through VIF1 packets, VU1 microprograms and
+   XGKICK (GIF path 1); ps2kit has `vif.py` and `vu.py` in Python as a start.
+   VIF1 DIRECT/DIRECTHL is GIF path 2.
+3. **The GS, the rest.** The Z formats' and PSMCT16S's own block layouts,
+   CSM2 CLUTs, CLUT loading as the GS does it (CLD), local-to-host
+   transfers, mipmaps; each said once when a game first uses it.
+4. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS) answer
+   from a stand-in; the movies' ADPCM reaches the IOP and goes nowhere. Port
+   their logic from their code; an SPU2 model; check by ear.
+5. **A PCSX2 trace of the same boot**, still to do: the order of the IOP
+   commands and RPC calls, the PCRTC registers, a few screenshots at the
+   same moments.
+6. **The memory card with data**: a formatted card kept as host files, for
+   saving and loading.
 
 Open points:
-* FIELD changes three lines after the kernel takes VBON (a choice; the
-  game only needs "after the interrupt starts"); check against PCSX2.
-* The DualShock 2's actuator answers (01 02 00 0A, 01 01 01 14) are from
-  public descriptions of the pad protocol; check against PCSX2.
-* Koei's sound drivers answer zeros (a silent stand-in); 0 is confirmed as
-  success for kessound's init only. Phase 5 ports them from their code.
-* Deci2's TTY is implemented from the SDK's code but has printed nothing
-  yet (the game prints only on errors).
+* The IPU's IDCT and CSC rounding are not the hardware's (unknown); the
+  movies match ffmpeg within 4 levels.
+* The GS samples pixels at integer coordinates with a top-left rule: to
+  check against PCSX2 when 3D arrives.
+* The KOEIADS playback clock and the stream's infinitely fast drive are
+  stand-ins for timing.
+* From session 3: FIELD changes three lines after the vblank interrupt is
+  taken (a choice); the DualShock 2's actuator answers; Deci2's TTY never
+  printed.
 * From session 2: the FPU/VU model's last-bit differences and exponent 255;
   operations no test exercises (`qmfc2.i`, `sqrt.s`, `viadd`, `vmtir`, a few
   VU0 forms, `divu1`/`mflo1`).
 
-Restarting: run ps2kit from the directory holding the ps2kit checkout (the checkout being edited), not
-from this repository's root. Regenerate with `python -m ps2kit.recomp
-pc-dynastywarriors2/build/disc/SLES_500.57 --out pc-dynastywarriors2/build/recomp`,
-build with `ninja -C build/recomp-build ps2run linkcheck difftest` (clang,
-cmake, ninja from MSYS2's MinGW 64-bit environment), test as in
-[09-recompiler](09-recompiler.md), run as in [11-boot](11-boot.md). Text
-with backslashes goes through the editor, never a bash heredoc.
+Restarting: work on ps2kit in its own checkout beside this repository and
+run its Python tools from the directory that holds that checkout (from this
+repository's root, `python -m ps2kit` finds the pinned submodule instead).
+Regenerate with `python -m ps2kit.recomp pc-dynastywarriors2/build/disc/SLES_500.57
+--out pc-dynastywarriors2/build/recomp`, build with `ninja -C
+build/recomp-build ps2run linkcheck difftest` (MSYS2 MinGW 64-bit: clang,
+cmake, ninja, SDL3), test as in [09-recompiler](09-recompiler.md), run as in
+[12-movies](12-movies.md). Debugging the IPU: `PS2KIT_IPU_BITLOG`,
+`PS2KIT_IPU_DUMP`, `PS2KIT_IPU_CMDLOG` (see `runtime/ipu.cpp`).

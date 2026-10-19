@@ -124,3 +124,38 @@ real BIOS kernel (1.60, 2001) settled how the dispatcher takes interrupts
 leaves a pending cause alone, as modelled. Two smaller bugs: an index into
 the FIFO table (a crash) and `rt_die` calling `exit()` while other threads
 held locks (a hang); the bash-heredoc trap from session 2 bit twice more.
+
+## Session 4 — the first pictures
+
+Goal: the publishing checkpoint, the first picture on screen
+([12-movies](12-movies.md)).
+
+Results:
+
+* **The memory card**: an empty slot. mcserv's `sceMcGetInfo` answers -11
+  with type 0, as MCMAN's detection does with no card (read in MCSERV
+  v2.06 and MCMAN v2.07); the game shows its no-card message and goes on.
+* **Streaming**: CDVDFSV's stream commands (init, start, seek, stop, read),
+  as its v2.08 code answers them, with an infinitely fast drive.
+* **The IPU** (ps2kit `runtime/ipu.cpp`): FIFOs fed and drained by DMA
+  channels 4 and 3 on the unit's own thread; BCLR, VDEC, FDEC, BDEC, SETIQ,
+  SETVQ, CSC, SETTH. What libmpeg expects of each was read in its code; the
+  MPEG-2 tables are checked at start-up by their share of the code space.
+  `KOEILOGO.PSS` decodes as ffmpeg decodes it, within IDCT rounding (at
+  worst 65.8 dB, no sample off by more than 4).
+* **KOEIADS's host transfer**, from the module's code, so that the movie
+  player can hand over its audio and start; the playback is a clock.
+* **The GS** (ps2kit `runtime/gs.cpp`): local memory with ps2kit.gsmem's
+  layouts, GIF path 3, transfers, a software rasteriser, the PCRTC's
+  picture; **a window** (SDL3) and `--shot` screenshots.
+* **The first picture**: the Koei logo movie, then Midas's, at 25 frames
+  a second; confirmed by the user in the window.
+
+What the tests caught: one transcription error in the motion-code table
+(codes 11 to 16 one bit short), found by logging every bit the IPU
+consumed (equal to the elementary stream) and decoding the failing
+macroblock by hand and offline. A hand decode of mine was wrong on the way,
+and so, for a while, was the comparison with ffmpeg itself: libmpeg keeps
+its pictures by macroblock columns, and the raster comparison showed
+errors that were not there. The movies ran at 3.6 frames a second until
+the short IPU commands stopped crossing threads.

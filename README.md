@@ -5,7 +5,7 @@ Force / Koei, 2000), by static recompilation.
 
 It is the first game of **ps2kit**'s own recompiler and runtime: the
 toolkit that grew inside [pc-extermination](https://github.com/vs-sr-dev/pc-extermination)
-now stands on its own (submodule `ps2kit/`), and this port is where its
+now stands on its own ([ps2kit](https://github.com/vs-sr-dev/ps2kit), submodule `ps2kit/`), and this port is where its
 translator from EE code to C++ and its runtime are being written.
 
 ## BYOA — Bring Your Own Assets
@@ -31,6 +31,17 @@ python -m ps2kit.elf build/disc/SLES_500.57 --functions build/map/symbols.tsv
 python -m ps2kit.ee build/disc/SLES_500.57 --census --functions build/map/symbols.tsv
 ```
 
+Running the game needs the recompiled code built (CMake, Ninja, clang, SDL3;
+MSYS2's MinGW 64-bit environment so far, see [docs/09-recompiler.md](docs/09-recompiler.md)):
+
+```sh
+python -m ps2kit.recomp build/disc/SLES_500.57 --out build/recomp
+cmake -S build/recomp -B build/recomp-build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS_RELEASE=-O1
+ninja -C build/recomp-build ps2run
+build/recomp-build/ps2run "build/image/Dynasty Warriors 2 (Europe).cue"
+```
+
 ## Status
 
 Session 1: the disc and the executable are mapped. The executable is not
@@ -42,7 +53,11 @@ register for register and byte for byte (2 311 differential runs, none
 different). Session 3: ps2kit's runtime boots the recompiled game from the
 disc image, through the IOP's reboot and module loading, file reads, pad and
 sound initialisation, into its own 50 Hz frame loop, up to its first memory
-card request; nothing is drawn yet ([docs/11-boot.md](docs/11-boot.md)).
+card request ([docs/11-boot.md](docs/11-boot.md)). Session 4: the memory
+card (an empty slot), streaming from the disc, ps2kit's models of the IPU
+(checked against ffmpeg on the game's movies) and of the GS, and a window:
+the game shows its first pictures, the Koei and Midas logo movies
+([docs/12-movies.md](docs/12-movies.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -57,6 +72,7 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     09-recompiler.md    the translator and how it is checked
     10-ps2kit.md        what this port asked of ps2kit
     11-boot.md          the runtime's boot, what the game does, what it showed
+    12-movies.md        the memory card, streaming, the IPU, the GS: the first pictures
 
 ## Licence
 

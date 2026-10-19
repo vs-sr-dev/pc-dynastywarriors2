@@ -140,9 +140,11 @@ cause; both as modelled here.
 
 ## Not modelled yet (each stops the run with a message)
 
-* The memory card (mcserv functions other than 0xFE): the current stop.
-* The GS, VIF and VU1 (DMA to them is counted, not drawn), VU0 micro mode,
-  the IPU (movies), the SPU2 and Koei's drivers (sound), timer interrupts.
+Session 4 went on from here: the memory card, streaming, the IPU and the GS
+are in [12-movies](12-movies.md). Still missing:
+
+* VIF and VU1 (DMA to them is counted, not run), VU0 micro mode, the SPU2
+  and Koei's drivers (sound), timer interrupts.
 * Deci2 reads; `sceCdRead` with 2328- or 2340-byte sectors; the other
   cdvdfsv, padman and loadfile functions.
 * Transfer time: every DMA and disc read completes at once.
