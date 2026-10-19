@@ -27,6 +27,17 @@ memory, dispatch and a stub that stops at the first system call.
 4. Keep the differential tests green on every runtime change (named suite
    and leaf fuzzing; numbers in [00-sessions](00-sessions.md)).
 
+5. When the game prints its first lines on the host: ask the user whether
+   that is "something to show" for publishing ps2kit and this repo on
+   GitHub (decided after session 1: public, but not before).
+
+Restarting: run ps2kit from the directory that holds the checkout being
+edited (the directory holding the ps2kit checkout), not from this repository's root, where the pinned
+submodule would be imported. Regenerate with `python -m ps2kit.recomp
+pc-dynastywarriors2/build/disc/SLES_500.57 --out pc-dynastywarriors2/build/recomp`,
+rebuild with `ninja -C build/recomp-build` (clang, cmake, ninja from
+MSYS2's MinGW 64-bit environment), test as in [09-recompiler](09-recompiler.md).
+
 Open points from session 2:
 * The model of the FPU and VUs is PCSX2's default (round toward zero,
   clamping); the console's last-bit differences in products and its
