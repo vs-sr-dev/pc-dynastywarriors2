@@ -11,11 +11,26 @@ runs, interpreted.
 
 1. **A real battle (first).** Everything so far was the attract mode's
    opening; the game proper runs its own vblank handler (`main_callback`,
-   with its check of the channels and its GS reset). Play one: Musou mode,
-   a character, the first battle, in a window with sound. Check the
-   picture (whole? dark? see 6), the speed (lists within a field, resets
-   by `main_callback`: count them with `PS2KIT_TIMELINE`), and the sound
-   (music, effects, voices) by ear against PCSX2.
+   with its check of the channels and its GS reset). The user played one
+   at the end of session 10 (window, sound, Xbox pad): the battle runs and
+   is broadly right, but:
+   * **Input queued and replayed**: with many characters on screen,
+     presses (up, left, up) do nothing, then 3-4 seconds later the
+     character moves up-left-up. A game that reads the pad's state each
+     field would lose presses, not replay them: something queues. First
+     measure which: SDL's events read late (they are pumped on the main
+     thread with the picture), or the picture shown seconds behind the
+     game (the GS's lag: `gs_lag`, the heartbeat); then the fix.
+   * **The frame rate drops** as characters gather (session 9's slow
+     lists, now in a real battle: `PS2KIT_TIMELINE`, the thread profiles;
+     count `main_callback`'s resets).
+   * **Flicker in the battle's introduction**: the ground's textures come
+     and go, then stay stable once the player has control. Record it
+     (`PS2KIT_GS_DUMP`) and replay field by field: texture transfers, CLUT
+     loads or local-to-local copies landing in the wrong field.
+   * The log said once "both PCRTC read circuits at once (circuit 2 shown)
+     is not modelled yet": circuit merging, likely the feedback blur (4).
+   Then the sound (music, effects, voices) by ear against PCSX2.
 2. **`PS2KIT_RESETS=1` by default** (the console's behaviour) once a real
    battle's lists fit in a field.
 3. **Sound, what is left**: the SPU2's own Gaussian interpolation (cubic
