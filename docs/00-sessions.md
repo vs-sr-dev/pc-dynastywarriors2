@@ -317,3 +317,38 @@ bash heredocs ate backslashes again (each caught before a build was kept);
 a sampling profiler deadlocked by allocating while its target thread held
 the heap lock; `vutrans` first linked the code it generates, so a broken
 output could not be regenerated (now it stands alone).
+
+
+## Session 9 — a battle list within its field
+
+Goal: the TODO's first item, one list's latency ([17-latency](17-latency.md)).
+
+Results:
+
+* **VIF1**: a chain's transfers and the GS's paths 1 and 2 handed over in
+  batches; a battle list's time in VIF1 from 33 ms to about 7 ms.
+* **The GS**: drawing jobs read texture copies, so texture transfers no
+  longer stop the drawing threads; the feedback copy is no longer drawn
+  alone; jobs that must follow others are fences; PSMCT32 specialised (it
+  never was: 0 meant "other"); an SSE2 bilinear sample whose rounding
+  `roundcheck` holds to the reference's on every float. The battle's
+  recording: 23.4 ms a field on one thread (32.7), 5.3 to 5.9 on eight
+  (12.3). Equal to the reference on five recordings.
+* **Timing**: a channel ends when the GS is given its data, unless the
+  GS's thread is more than a field behind (`PS2KIT_GS_LAG`); the clock runs
+  at time-critical priority.
+* **The attract battle**: a list every field, 2 to 7 of about 745 cut by
+  the game's reset (about half before).
+* **Found, open**: the battle's picture shows only its lower half. The
+  SDK's 16-bit double buffer, still swapped and cleared by the vblank
+  handler, clears half of the 32-bit buffer each field shows. The packets
+  are the game's own, so the question is what the PCRTC shows: for PCSX2.
+
+What took the time: each bottleneck hid the next (VIF1's queue, the GS's
+queue, sync jobs, a primitive drawn alone, the channel's end, the GS's
+thread waiting, a late blank, the pixel loop); each was found with the
+timeline (now naming who starts a transfer) or a thread profile (now naming
+system libraries, which showed the waits). An exhaustive check caught the
+one float where an obvious rounding was wrong, which the recordings had
+not. Three bash heredocs ate backslashes again (each a compile error,
+nothing kept); edits with a backslash go through Write or Edit only.

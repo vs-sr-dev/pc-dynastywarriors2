@@ -1,45 +1,49 @@
-# TODO — session 9
+# TODO — session 10
 
-Where session 8 left the game ([16-speed](16-speed.md)): the character
-select is right with no preset; VU1's programs run as translated C++, the
-GS draws on worker threads, VIF1 is faster. The attract mode's battle draws
-more frames, but one large list in two still outlasts its field: the game
-resets and that field shows the PCRTC's 32-bit default (green or striped).
+Where session 9 left the game ([17-latency](17-latency.md)): the attract
+battle sends a list every field and 2 to 7 in about 745 are cut by the
+game's reset; the menus and the character select are right. The battle's
+picture shows only its lower half (below).
 
-Before running: make the VU1 translations (they are game data, kept in
-`build/`): dump with `PS2KIT_VU1_DUMP` in the battle and the character
-select, run `vutrans`, rebuild (commands in [16-speed](16-speed.md)).
-Without `build/recomp/vu1_trans.cpp` everything still runs, interpreted.
+Before running: make the VU1 translations if `build/recomp/vu1_trans.cpp`
+is missing (commands in [16-speed](16-speed.md)); without it everything
+runs, interpreted.
 
-1. **One list's latency.** A large list takes VIF1 about 14 ms, and the
-   GS's decoding and drawing follow behind; it must end within ~17 ms of
-   its start. Measure with `PS2KIT_TIMELINE` (start, `vif1done`, end) and
-   the profilers. Ideas: VIF1's code walk (a profile showed the walk
-   itself, after UNPACK, as large as VU1); the GS's decoding (per-vertex
-   work, `fast_prim`, job size); fewer sync jobs (whole transfers instead
-   of each packet's share); GS decoding beside VIF1 for path 1 (a second
-   decode thread is not possible, the GIF is one stream, but less work per
-   packet is).
-2. **The PCRTC's feedback blur** (`g_FeedBackPCRTC`, `g_SetBlurPCRTC`,
-   `SetFeedBack`): decompiled in session 8 (EXTBUF 0x1429E00: EXBP 0x1E00,
-   EXBW 10, WFFMD 1, EMODA 2; FBIN 0, the merged picture written back to
-   the buffer circuit 1 reads, ALP 0xBE). Not seen in the attract battle's
-   window; find where the game turns it on.
-3. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS); an SPU2
-   model; check by ear.
-4. Once lists fit: `PS2KIT_RESETS=1` by default (the console's behaviour).
-5. From before: battles look dark (compare with PCSX2), the GS's Z and
+1. **The battle's picture (first).** Check with PCSX2, software renderer:
+   does the attract battle show the whole picture, and is it the buffer
+   DISPFB2 names (drawn the field before) or the one drawn in the field? In
+   our model the vblank handler's SDK swap (16-bit, `gpDBuffPtr`, with its
+   clear) wipes half of the 32-bit buffer each field shows (details in
+   17-latency, "Open"). Then fix what the PCRTC shows, or what we got wrong
+   on the way there.
+2. **Sound (phase 5).** Koei's two IOP drivers (KESSOUND, KOEIADS) and an
+   SPU2: decide first between running the IOP modules on an IOP
+   interpreter with an SPU2 model, and modelling Koei's RPC services at
+   the SIF boundary as the rest of the IOP is. Check by ear.
+3. **The last cut lists.** Bursts where the drawing threads fall a field
+   behind (the battle's first second; CLUT changes: `CLUT_SLOTS` is 64).
+   Ideas: more CLUT slots; strips dealt to threads by load rather than
+   fixed (the host's efficient cores are slower); the GS thread's decoding
+   (`fast_prim`, `vertex`).
+4. **The PCRTC's feedback blur** (`SetFeedBack`, `g_SetBlurPCRTC`;
+   EXTBUF/EXTDATA/EXTWRITE): not used by the attract mode (no write to
+   them); find where the game turns it on, then model the write-back.
+5. Once lists fit: `PS2KIT_RESETS=1` by default (the console's behaviour).
+6. From before: battles look dark (compare with PCSX2), the GS's Z and
    PSMCT16S layouts, CSM2, mipmaps, the memory card with data.
 
 Open points:
-* `vutrans` translates only what a dump saw (64 micro images at most);
-  others run interpreted. A JR to an address not after a BAL/JALR stops.
-* The deferred-transfer and alone sync jobs make every drawing thread wait
-  for the slowest (about 2 s of 20 per 5 s in a battle).
+* Texture copies in the menus: about 6 MB a field (the destinations of
+  local-to-local transfers, used as textures after); each local-to-local
+  transfer is a full barrier.
+* `vutrans` translates only what a dump saw; a JR to an address not after a
+  BAL/JALR stops.
 * The EFU's ESIN, EATAN and EEXP use the host's library.
+* Scripted presses are timed in seconds: once in session 9 a run stayed in
+  the movies (the presses missed); run again.
 
 Restarting: as before (ps2kit in its own checkout; build with
-`ninja -C build/recomp-build ps2run gsreplay vubench vutrans linkcheck difftest`).
+`ninja -C build/recomp-build ps2run gsreplay vubench vutrans roundcheck linkcheck difftest`).
 Start every two seconds from 8 to 22 reaches the menu; cross at 28 opens
 the character select; no cross, and the attract battle starts at about 45 s.
 Edit scripts with backslashes go into files (Write), never a heredoc.

@@ -25,7 +25,8 @@ code it stays in `build/` and is made from the user's own disc.
 
 ## The GS on several threads
 
-`PS2KIT_GS_THREADS` (default 4) drawing threads take the fast rasteriser's
+`PS2KIT_GS_THREADS` (default 4; from session 9 half the host's hardware
+threads, 2 to 8: [17-latency](17-latency.md)) drawing threads take the fast rasteriser's
 triangles and sprites as jobs; each draws the strips of 8 rows it owns, in
 the GS's order, so memory ends as one thread leaves it. The GS's thread
 keeps the spans of memory pending jobs write and read and waits only where
