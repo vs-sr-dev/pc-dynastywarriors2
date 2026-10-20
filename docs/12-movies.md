@@ -95,6 +95,23 @@ more than the command (62% of the time in `_waitIpuIdle64`), so the short
 commands run in the writing thread when the FIFO already holds every bit
 they can read. The movies now play at 25 frames a second.
 
+**Movies started again (found in session 10).** With sound, Omega Force's
+logo was late or missing: `msPlayMovie` calls `koeiPlayMovie` until it
+succeeds, and it failed 24 times for that logo (4 for the PAL logo, a
+number that changed from run to run). libmpeg's error callback
+(`mpegError`) had set the player's abort flag: BDEC read zeros in the
+middle of a slice. They came from channel 4. Koei's video buffer is a ring
+of 0x800-byte slots, each behind a `ref` tag, the last one filled behind a
+`refe`; `kpmViBufAddDMA` stops the channel, turns that `refe` into `ref`,
+and restarts it with CHCR's TAG field set to 3 so that the DMAC goes on to
+the next tag. The runtime decides from that field whether a restarted
+chain ends, and it filled the field with the tag's bits 47:32 (the low
+half of the tag's address: a shift by 16 before the mask) instead of its
+bits 31:16. So whether a `refe` ended the chain depended on where the slot
+lay; past it, stale slots went to the IPU. Fixed (in the generic chain
+too); no restart since, each movie's stream started once.
+`PS2KIT_IPU_ZEROQW` logs all-zero quadwords taken by channel 4.
+
 ## KOEIADS's host transfer
 
 The player hands the movie's audio (SPU ADPCM, 44.1 kHz stereo in

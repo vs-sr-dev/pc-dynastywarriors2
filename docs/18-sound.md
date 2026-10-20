@@ -102,7 +102,20 @@ cubic, not the SPU2's own Gaussian table.
   interrupts; every RPC call the game makes is answered by them; the game
   runs through the movies, the menu and the attract battle as before.
 * The timer's rate (above); the stream without gaps; no clipping.
-* The rest is for the ear: the logo's jingle, the movies' sound (KOEIADS's
-  host transfer), the attract battle's music and effects. The menu is
+* By ear (the user, against PCSX2): the attract mode's recording (the
+  logo's jingle, the movies' sound through KOEIADS's host transfer, the
+  attract battle's music and effects) is right; the menu is silent on the
+  console too. Two sounds were missing, both found from there:
+  * the "whoosh" on reaching the menu (KESSOUND, core 0, voice 23): core
+    0 was never heard. ATTR bit 14, which LIBSD sets with bit 15, had been
+    taken as a mute (it is the PS1's "unmute"; PCSX2 ignores it), and core
+    1's external input (core 0's output) was scaled by BVOL as a 15-bit
+    voice volume. EVOL, AVOL and BVOL are 16-bit (LIBSD writes 0x7FFF);
+    AVOL is the external input's, BVOL the memory input's. Found with
+    `PS2KIT_SPU2_LOG`, which now prints each key-on's registers and
+    sample, key-offs and each voice's end: the voice played, its peak was
+    high, the output stayed at one step of 16 bits;
+  * Omega Force's logo: the movie player started it again and again, a
+    DMA fault (below, and [12-movies](12-movies.md)). The menu is
   silent in our runs, and the game's calls say so too: with the stand-ins
   of before it called `koeiAdsPlay` first at the attract battle as well.
