@@ -352,3 +352,40 @@ system libraries, which showed the waits). An exhaustive check caught the
 one float where an obvious rounding was wrong, which the recordings had
 not. Three bash heredocs ate backslashes again (each a compile error,
 nothing kept); edits with a backslash go through Write or Edit only.
+
+
+## Session 10 — the battle's whole picture; sound
+
+Goal: the TODO's first two items, the battle's picture (after the user's
+PCSX2 check) and sound ([17-latency](17-latency.md), [18-sound](18-sound.md)).
+
+Results:
+
+* **The picture**: PCSX2 shows the attract battle whole. The cause was
+  ps2kit's interrupt chains: the BIOS kernel (read in the user's ROM 2.20)
+  puts a handler added with next = 0 at the head and stops at a negative
+  return, so the opening's vblank handler ends the chain and
+  `main_callback` (its 16-bit swap and clear, its GS reset) never runs in
+  the opening. The attract battle's "cut lists" were the same artifact.
+* **Sound**, the route the user chose: LIBSD, MODHSYN, MODMIDI, MODMSIN,
+  KOEIADS and KESSOUND run unchanged on an R3000 interpreter at the IOP's
+  clock, with about 50 kernel functions as host code, and an SPU2 at its
+  registers (voices, ADSR, mixes, reverb, IRQA, transfers); `--wav`.
+  Checked by ear against PCSX2: the logos, the movies, the menu's sounds,
+  the attract battle's music and effects; the menu is silent there too.
+* Fixed on the way: KESSOUND's 4.2 ms timer ticks merged by a coarse wait
+  (music at a third of its speed); the BGM stream played past a block not
+  yet refilled (samples now stop at an interrupt); core 0 never heard
+  (ATTR bit 14 taken as a mute, AVOL/BVOL); movies started again and again
+  (CHCR's TAG field filled from the tag's address: a toIPU chain ran past
+  its end, zeros to the IPU); the opening movie at 16 pictures a second
+  (the IPU's thread now spins for its next command), its sound stuttering.
+
+What took the time: each sound bug hid behind another, and each was found
+by a measurement rather than by ear: the timer by interrupts a second, the
+gaps by their exact length (one stream block), the silent core by a
+key-on's register dump and a voice's peak against the output's, the movie
+restarts by a log of all-zero quadwords that showed an impossible TAG
+field. One rare host crash (a traced run, while movies were restarting,
+before the DMA fix) was not seen again in ten runs; its cause is not
+proven. Another heredoc ate a backslash (caught before writing).

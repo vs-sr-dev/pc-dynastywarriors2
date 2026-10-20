@@ -67,7 +67,14 @@ at full speed and opens the character select
 ([docs/14-gs-speed.md](docs/14-gs-speed.md)). Session 7: VIF1 in full and
 VU1, with their pipelines modelled, on a thread of their own: the character
 select's 3D models, and the attract mode's battle, not yet at full speed
-([docs/15-vu1.md](docs/15-vu1.md)).
+([docs/15-vu1.md](docs/15-vu1.md)). Session 8: VU1's microcode translated
+to C++ (checked against the interpreter), the GS on several threads
+([docs/16-speed.md](docs/16-speed.md)). Session 9: a battle list within its
+field ([docs/17-latency.md](docs/17-latency.md)). Session 10: the battle's
+whole picture (the vblank handlers in the BIOS kernel's order), and sound:
+the IOP's own sound modules run unchanged on an interpreter of the IOP's
+processor, with an SPU2 modelled at its registers; checked by ear against
+PCSX2 ([docs/18-sound.md](docs/18-sound.md)).
 See [docs/00-sessions.md](docs/00-sessions.md) for the log, [docs/06-attack-plan.md](docs/06-attack-plan.md) for the route
 and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
 
@@ -86,6 +93,9 @@ and [docs/07-next-session.md](docs/07-next-session.md) for what is next.
     13-title.md         input, VU0's micro mode, VIF1 and GIF path 2: the title screen
     14-gs-speed.md      the GS's recordings, two rasterisers, the GS's thread: the character select
     15-vu1.md           VIF1, VU1 and its pipelines, the CLUT buffer: the 3D models
+    16-speed.md         VU1 translated to C++, the GS on several threads
+    17-latency.md       one battle list within its field; the battle's picture
+    18-sound.md         the IOP's sound modules on an R3000 interpreter, the SPU2
 
 ## Licence
 
