@@ -284,3 +284,36 @@ hid everything, then the fog factor from vf30. Each was found by measuring
 call chains in the profiler) rather than by reading the microcode, which
 was right. A bash heredoc ate backslashes twice more (one compile error
 each, nothing kept).
+
+
+## Session 8 — vf30 found; VU1 translated; the GS on several threads
+
+Goal: the TODO's GS threads and VU1 speed ([16-speed](16-speed.md)).
+
+Results:
+
+* **vf30**: the user checked PCSX2 (fast boot and full BIOS boot both show
+  lit officers), so the game sets it: `SetFogOff` stores VU1's fog factor
+  through VU0's window on VU1's registers (quadword 0x41E). The runtime now
+  maps VU0's addresses from 0x4000 to VU1's VF registers; no preset needed.
+* **The GS on worker threads** (`PS2KIT_GS_THREADS`, default 4), deferred
+  transfers and lone primitives as sync jobs, exact block sets; equal to
+  the reference rasteriser on every recording.
+* **VU1 microcode translated to C++** (`vutrans`), its timing decided while
+  translating; equal to the interpreter on 214 dumped starts and about 3.5
+  million in-game starts; VU1 about 6 times faster in a battle.
+* **VIF1** faster (batched XGKICKs, specialised UNPACKs checked on 17.7
+  million, NOPs, codes in place); the resets after a timeout modelled
+  (`PS2KIT_RESETS`, off); `PS2KIT_TIMELINE`, thread profilers.
+* **The battle**: more frames drawn, but a large list still outlasts a
+  field about half the time, and each such field shows the reset's
+  32-bit PCRTC set-up. Next: one list's latency.
+
+What took the time: a slow battle had several bottlenecks in turn (VU1,
+then XGKICK hand-offs, then the GS's waits on transfers, then CLUT loads
+that looked like conflicts because a span of whole pages ran past the end
+of memory); each was found with a profiler or a counter by cause. Three
+bash heredocs ate backslashes again (each caught before a build was kept);
+a sampling profiler deadlocked by allocating while its target thread held
+the heap lock; `vutrans` first linked the code it generates, so a broken
+output could not be regenerated (now it stands alone).
