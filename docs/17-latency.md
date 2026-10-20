@@ -26,6 +26,10 @@ next blank the callback asks `sceGsSyncPath` whether both channels are
 idle, and resets the GS if not. With the lists fast enough the game sends
 one every field (50 a second), where it sent one every two before.
 
+(Session 10: this is how ps2kit ran it, not how the console does. In the
+attract mode the opening's own vblank handler sends the swap and the list,
+and `main_callback` does not run at all; see "The battle's picture" below.)
+
 ## What took the time, in order
 
 1. **VIF1's queue.** Each DMA tag was one item for VIF1's thread (an
@@ -94,9 +98,9 @@ equal on every field of five recordings (`build/s9/battle.gsd`,
 hardware threads (2 to 8); on the 12th-gen Core this was measured on (6
 performance cores and 4 efficient ones) 8 did best.
 
-## Open: the battle's picture
+## The battle's picture (settled in session 10)
 
-The attract battle shows only the lower half of its picture; the upper half
+The attract battle showed only the lower half of its picture; the upper half
 is green or black. Not new (it is in session 7's recordings, and session 6
 saw "green and black areas" there before VU1 drew the models), and not a
 rasteriser fault: local memory is the reference's.
@@ -112,7 +116,45 @@ into half of buffer 0, its Z (zero) into the top half of buffer 0xA0000.
 After each field the buffer just drawn is whole; the buffer PMODE/DISPFB2
 name for the field (drawn the field before) has lost its top half. The
 packets are the game's own (`gbDrawFlag` stays 1, `gpDBuffPtr` is only set
-by `set_main_graph`, GIF_MODE is never written), so the console receives
-the same; what differs must be when or what the PCRTC shows. To settle with
-PCSX2 (its software renderer): does the attract battle show the whole
-picture, and which buffer.
+by `set_main_graph`, GIF_MODE is never written).
+
+**PCSX2** (software renderer, the attract battle after the title, nothing
+pressed): the whole picture, every field.
+
+**The cause: the order of the vblank handlers.** The attract battle is the
+opening (`StartOpening` calls `RunOpening`; `main_callback` is only removed
+after it returns). On VBON (cause 2) the chain holds three handlers, each
+added with `AddIntcHandler(2, fn, 0)`: `main_callback` (by
+`set_main_callback`, at boot), a field counter at 0x2E6B30 (by
+`InitOpening`), and `OnHandleVSync` (by `CScene00::SetupObjects` and
+`ForceBreak`), which waits for the channels (`sceGsSyncPath(0, 0)`, a
+wait, not a check), swaps `g_gsDBuff` and sends the frame's list. The
+opening's two handlers return -1; `main_callback` returns 0.
+
+The BIOS kernel (ROM 2.20's `KERNEL`, read with capstone) settles both
+rules:
+
+* `AddIntcHandler` (0x800018B0) inserts the new node before a position in
+  a circular list whose header is at 0x80019458 + 12 * cause: with next =
+  -1 before the header (the end), with next = 0 before the first node (the
+  head), otherwise before the node with that id (an id not in use: -1).
+* The chain walk (0x800016D8 for INTC, 0x800017F0 for DMAC) calls each
+  enabled user handler through the user-mode trampoline at 0x80002840 and
+  stops at once when it returns a negative value (`bgez v0`, else out).
+
+So on the console the chain is [`OnHandleVSync`, counter, `main_callback`],
+and the first handler's -1 ends it: during the opening `main_callback`
+never runs, sends no 16-bit swap or clear, and never checks or resets the
+channels. ps2kit took next = 0 as "last" and called every handler, so
+`main_callback` ran first, cleared half of the buffers about to be shown,
+and reset the GS when a list was late. Both rules are now the kernel's
+(`add_handler` and `deliver` in `runtime/kernel.cpp`).
+
+After the fix: 20 screenshots, one a second over the attract battle, all
+whole; no reset by the game in the battle; 50 lists a second except at
+scene changes. The menus and the character select (one handler on VBON)
+are unchanged. The "2 to 7 of 745 lists cut" above, and the resets of
+[16-speed](16-speed.md) and [15-vu1](15-vu1.md), came from
+`main_callback` running where it does not: in the opening a late list is
+waited for, not cut. The reset can still happen where `main_callback` is
+the vblank handler (the game proper).

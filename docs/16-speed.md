@@ -78,3 +78,8 @@ against one in four or five in session 7) while the frames drawn went up
 too. `PS2KIT_RESETS=1` models the reset faithfully, and loses nearly every
 frame until the lists fit in a field. Next: the latency of one list (VIF1's
 code walk, the GS's decoding, the drawing threads) rather than the average.
+
+(Session 10: in the attract battle these resets were ps2kit's. On the
+console `main_callback` does not run during the opening: the opening's
+handler is first in the chain and ends it. See
+[17-latency](17-latency.md), "The battle's picture".)
