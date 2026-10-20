@@ -94,6 +94,11 @@ followed by a wait for BUSY to clear. Handing each to the IPU's thread cost
 more than the command (62% of the time in `_waitIpuIdle64`), so the short
 commands run in the writing thread when the FIFO already holds every bit
 they can read. The movies now play at 25 frames a second.
+(Session 10: not the opening movie, whose sound stuttered once it was
+heard: 16 pictures a second, the EE half its time in `_waitIpuIdle`, each
+BDEC waiting about 28 us for 11 us of work, the rest the IPU's thread
+waking from its condition variable. The thread now spins up to 200 us for
+the next command before it sleeps: 25 a second, the sound whole.)
 
 **Movies started again (found in session 10).** With sound, Omega Force's
 logo was late or missing: `msPlayMovie` calls `koeiPlayMovie` until it
