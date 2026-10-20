@@ -16,6 +16,7 @@ root: `python -m ps2kit.<module>`.
 | 5 | `1427bfc` | `runtime`: the pad from the host (`input.cpp`, `--press`), VIF0 and VU0's micro mode (`vu0.cpp`), VIF1's census and GIF path 2 (`vif1.cpp`), `sceCdReadClock`, vf0 = (0, 0, 0, 1), `PS2KIT_WATCH`; VU0 MAX/MINI and DIV/SQRT/RSQRT rules in `recomp` and `eeemu` |
 | 6 | `79c615c`, `fa1d37f` | `runtime`: GS recordings (`PS2KIT_GS_DUMP`) and `gsreplay` (replay, timing, pictures, a host profiler, `--compare`); the rasteriser as a reference and a fast form checked against it, exact edge functions; the GS on its own thread (`PS2KIT_GS_SYNC`); FIELD after the guest's own VBON acknowledgement; the picture taken at each vertical blank, interlaced fields blended (`PS2KIT_DEINTERLACE`); DMA starts on STR's edge; local-to-host transfers |
 | 7 | `b32d650`, `e5dd05e` | `runtime`: VIF1 in full and VU1 (`vif1.cpp`), one micro-mode interpreter with its pipelines for both units (`vu.cpp`), VIF1 and VU1 on their own thread, GIF path 1; `vubench`; `PS2KIT_VU1_DUMP`, `PS2KIT_VU1_VF`; the GS's CLUT buffer (CLD), DMA latencies in the heartbeat; the profiler's guest call chains; `gsreplay --vram`, `gsmem --vram`; `ghidra/Decomp.java` |
+| 8 | `c56f9f3` | `runtime`: VU0 reaches VU1's VF registers from address 0x4000 (macro and micro mode) |
 
 Game knowledge (file formats of `LINKDATA.BNS`, `SCENE.SDF`, the game's
 fixes) stays in this repository's `tools/`; only what any PS2 game could

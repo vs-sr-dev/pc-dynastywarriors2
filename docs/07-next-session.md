@@ -2,8 +2,8 @@
 
 Where session 7 left the game ([15-vu1](15-vu1.md)): VIF1 and VU1 work, on
 a thread of their own. The character select runs at 50 frames a second with
-its 3D officers (lit and textured with `PS2KIT_VU1_VF="30:0,0,255,0"`, black
-without). The attract mode's battle draws, but one field in four or five the
+its 3D officers (lit and textured since session 8 found who writes vf30:
+the EE, through VU0's window on VU1's registers). The attract mode's battle draws, but one field in four or five the
 game finds the frame's lists still running at the vertical blank and resets
 the GS (a green field, a lost frame). The heartbeat prints VIF1's and the
 GIF's start-to-end times: up to about 20 ms in a battle.
@@ -27,11 +27,9 @@ GIF's start-to-end times: up to about 20 ms in a battle.
    interpreter as its oracle; the microcode comes from MPGs (13 at start-up,
    then about one a frame in battle: which programs, from where, to find
    first). Smaller: `ps2f` in the remaining paths, the MAC computation.
-3. **vf30, a question for PCSX2 or a console.** The character select's fog
-   factor reads vf30, which no program of the game writes before it. Does the
-   character select show black officers in PCSX2 with a fast boot, and lit
-   ones with a full BIOS boot (whose start-up animation runs on VU1)? Then
-   the port needs to start VU1 as the BIOS leaves it, or the preset.
+3. ~~**vf30.**~~ Done in session 8: PCSX2 shows lit officers with either
+   boot, and `SetFogOff` stores vf30 with a macro-mode `vsqi` to VU0's
+   quadword 0x41E, which is VU1's vf30 (see [15-vu1](15-vu1.md), "vf30").
 4. **The PCRTC's feedback blur** (`g_FeedBackPCRTC`, `g_SetBlurPCRTC` in
    `effctlow.cpp`): EXTBUF/EXTDATA/EXTWRITE write the read circuit's output
    back into local memory, and PMODE blends the two circuits (ALP 0xBE).
