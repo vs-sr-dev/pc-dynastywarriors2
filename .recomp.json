@@ -1,0 +1,11 @@
+{
+  "$schema": "https://recomp.fyi/schema/v1.json",
+  "game": "Dynasty Warriors 2",
+  "system": "PS2",
+  "type": "recomp",
+  "toolchain": "ps2kit",
+  "status": "in-progress",
+  "targets": [
+    "Windows"
+  ]
+}
